@@ -1,10 +1,8 @@
 
 library pdf_checker;
 
-import 'dart:convert'; // For utf8.decode
+import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
 
 class PdfChecker {
   // Private constructor
@@ -161,45 +159,6 @@ class PdfChecker {
     }
     // TODO: Implement the full password check logic
     return false;
-  }
-
-  String _findObject(List<int> pdfBytes, int objNum, int genNum) {
-    final int xrefOffset = findXrefOffset(pdfBytes);
-    final String xrefContent = utf8.decode(pdfBytes.sublist(xrefOffset));
-
-    // Simplistic xref parsing, assumes traditional xref table
-    final xrefLines = xrefContent.split('\n');
-    int currentObjNum = 0;
-    for (final line in xrefLines) {
-      if (line.trim().isEmpty || line.startsWith('xref') || line.startsWith('trailer')) {
-        continue;
-      }
-
-      final parts = line.split(' ');
-      if (parts.length >= 2) {
-        // This is a sub-section header
-        currentObjNum = int.tryParse(parts[0]) ?? 0;
-        continue;
-      }
-
-      if (parts.length >= 3) {
-        if (currentObjNum == objNum) {
-          final int offset = int.tryParse(parts[0]) ?? 0;
-          final int generation = int.tryParse(parts[1]) ?? 0;
-          if (generation == genNum) {
-            // Found the object offset
-            final objectContent = utf8.decode(pdfBytes.sublist(offset));
-            final endobjIndex = objectContent.indexOf('endobj');
-            if (endobjIndex != -1) {
-              return objectContent.substring(0, endobjIndex);
-            }
-          }
-        }
-        currentObjNum++;
-      }
-    }
-
-    throw FormatException('Object $objNum $genNum not found in xref table.');
   }
 
 }
